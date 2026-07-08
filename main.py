@@ -65,75 +65,76 @@ while running:
                 bullet = Bullet((player.x + player.width/2 - bullet_width/2), player.y) 
                 bullets.append(bullet)
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
+            elif event.key == pygame.K_r:
                 reset_game()
 
-    #Update    
-    keys = pygame.key.get_pressed()
-    player.move(keys, WIDTH, HEIGHT)
-    current_time = pygame.time.get_ticks()
+    #Update
+    if not game_over:    
+        keys = pygame.key.get_pressed()
+        player.move(keys, WIDTH, HEIGHT)
+        current_time = pygame.time.get_ticks()
 
-    if current_time - last_spawn_interval > spawn_interval:
-        spawn_ufo()
-        last_spawn_interval = current_time
+        if current_time - last_spawn_interval > spawn_interval:
+            spawn_ufo()
+            last_spawn_interval = current_time
 
-    if current_time - asteroid_spawn > spawn_interval*5:
-        spawn_asteroid()
-        asteroid_spawn = current_time
+        if current_time - asteroid_spawn > spawn_interval*5:
+            spawn_asteroid()
+            asteroid_spawn = current_time
 
-    for ufo in ufos:
-        ufo.move()
+        for ufo in ufos:
+            ufo.move()
 
-    for bullet in bullets:
-        bullet.move()
-        if bullet.y < 0:
-            bullets.remove(bullet)
-
-    for asteroid in asteroids:
-        asteroid.move()
-        if bullet.y > HEIGHT - asteroid.radius:
-            bullets.remove(bullet)
-        
-    for bullet in bullets[:]:
-        for ufo in ufos[:]:
-            if Check_collision(bullet, ufo):
+        for bullet in bullets:
+            bullet.move()
+            if bullet.y < 0:
                 bullets.remove(bullet)
-                ufos.remove(ufo)
-                score += 10
+
+        for asteroid in asteroids:
+            asteroid.move()
+            if asteroid.y > HEIGHT - asteroid.radius:
+                asteroids.remove(asteroid)
+            
+        for bullet in bullets[:]:
+            for ufo in ufos[:]:
+                if Check_collision(bullet, ufo):
+                    bullets.remove(bullet)
+                    ufos.remove(ufo)
+                    score += 10
+                    break
+
+        for bullet in bullets[:]:
+            for asteroid in asteroids[:]:
+                if Check_collision(bullet, asteroid):
+                    bullets.remove(bullet)
+                    asteroids.remove(asteroid)
+                    explosion = Explosion(asteroid.x,asteroid.y)
+                    explosions.append(explosion)
+                    break
+
+        for explosion in explosions[:]:
+            explosion.update()
+            if explosion.radius >= explosion.max_radius:
+                explosions.remove(explosion)
+                game_over = True
                 break
 
-    for bullet in bullets[:]:
-        for asteroid in asteroids[:]:
-            if Check_collision(bullet, asteroid):
-                bullets.remove(bullet)
-                asteroids.remove(asteroid)
+        for ufo in ufos:
+            if ufoXplayer_collision(player, ufo):
+                game_over = True
+
+        for asteroid in asteroids:
+            if ufoXplayer_collision(player, asteroid):
                 explosion = Explosion(asteroid.x,asteroid.y)
                 explosions.append(explosion)
                 for explosion in explosions:
-                    explosion.update()
-                    if explosion.radius >= explosion.max_radius:
-                        explosions.remove(explosion)
-                        game_over = True
-                        break
-                break
+                        explosion.update()
+                        if explosion.radius >= explosion.max_radius:
+                            explosions.remove(explosion)
+                            game_over = True
+                            break
 
-    for ufo in ufos:
-        if ufoXplayer_collision(player, ufo):
-            game_over = True
-
-    for asteroid in asteroids:
-        if ufoXplayer_collision(player, asteroid):
-            explosion = Explosion(asteroid.x,asteroid.y)
-            explosions.append(explosion)
-            for explosion in explosions:
-                    explosion.update()
-                    if explosion.radius >= explosion.max_radius:
-                        explosions.remove(explosion)
-                        game_over = True
-                        break
-
-    if not game_over:
+        
         elapsed_time = current_time - start_time
         elapsed_seconds= elapsed_time//1000
     
